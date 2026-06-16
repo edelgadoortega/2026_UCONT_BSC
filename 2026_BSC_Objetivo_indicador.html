@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Balanced Scorecard</title>
+  <style>
+    :root {
+      --blue-900: #17324d;
+      --blue-800: #21476b;
+      --blue-700: #275d8f;
+      --blue-100: #eaf3fb;
+      --gray-900: #1f2933;
+      --gray-700: #52606d;
+      --gray-300: #d9e2ec;
+      --gray-100: #f5f7fa;
+      --white: #ffffff;
+      --green: #197b4c;
+      --green-bg: #e8f7ef;
+      --red: #b42318;
+      --red-bg: #fdeceb;
+      --amber: #b7791f;
+      --shadow: 0 18px 42px rgba(23, 50, 77, 0.14);
+      --radius: 8px;
+      --focus: 0 0 0 4px rgba(39, 93, 143, 0.24);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--gray-900);
+      background:
+        linear-gradient(135deg, rgba(234, 243, 251, 0.9), rgba(245, 247, 250, 0.95)),
+        radial-gradient(circle at top left, rgba(39, 93, 143, 0.16), transparent 32rem);
+      line-height: 1.5;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
+      gap: 1.25rem;
+      width: min(1180px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 1.25rem 0;
+    }
+
+    .syntax-panel {
+      position: sticky;
+      top: 1rem;
+      align-self: start;
+      max-height: calc(100vh - 2rem);
+      overflow: auto;
+      background: var(--blue-900);
+      color: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.25rem;
+    }
+
+    .syntax-panel h1 {
+      margin: 0 0 1rem;
+      font-size: 1.45rem;
+      letter-spacing: 0;
+    }
+
+    .syntax-block {
+      padding: 1rem 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .syntax-block h2 {
+      margin: 0 0 0.45rem;
+      font-size: 1rem;
+      color: #d9ebfb;
+    }
+
+    .formula {
+      display: grid;
+      gap: 0.4rem;
+      margin: 0.65rem 0;
+    }
+
+    .formula span {
+      display: block;
+      padding: 0.55rem 0.7rem;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 0.95rem;
+    }
+
+    .example {
+      margin: 0.6rem 0 0;
+      color: #eaf3fb;
+      font-size: 0.93rem;
+    }
+
+    .note {
+      margin: 0.9rem 0 0;
+      padding: 0.85rem;
+      border-radius: 6px;
+      color: #17324d;
+      background: #f4d58d;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-width: 0;
+    }
+
+    .topbar,
+    .case-card,
+    .result-card {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .title-group h2 {
+      margin: 0;
+      font-size: 1.45rem;
+      color: var(--blue-900);
+    }
+
+    .title-group p {
+      margin: 0.25rem 0 0;
+      color: var(--gray-700);
+      font-size: 0.96rem;
+    }
+
+    .score-pill {
+      min-width: 9rem;
+      padding: 0.7rem 0.9rem;
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--blue-800);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .progress-wrap {
+      height: 0.55rem;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--gray-300);
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue-700), #43a5d5);
+      transition: width 260ms ease;
+    }
+
+    .case-card {
+      overflow: hidden;
+    }
+
+    .case-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 1rem;
+      align-items: start;
+      padding: 1.35rem;
+      background: linear-gradient(120deg, var(--blue-900), var(--blue-700));
+      color: var(--white);
+    }
+
+    .case-hero h2 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2vw, 1.9rem);
+      letter-spacing: 0;
+    }
+
+    .case-hero p {
+      margin: 0.5rem 0 0;
+      max-width: 68ch;
+      color: #eaf3fb;
+    }
+
+    .case-badge {
+      min-width: 7.5rem;
+      padding: 0.55rem 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      text-align: center;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .question-section {
+      padding: 1.25rem 1.35rem;
+      border-top: 1px solid var(--gray-300);
+    }
+
+    .question-section:first-of-type {
+      border-top: 0;
+    }
+
+    .question-section.is-locked {
+      color: var(--gray-700);
+      background: var(--gray-100);
+    }
+
+    .section-title {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      margin: 0 0 0.85rem;
+      color: var(--blue-900);
+      font-size: 1.08rem;
+    }
+
+    .step-number {
+      display: inline-grid;
+      place-items: center;
+      width: 2rem;
+      height: 2rem;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      color: var(--white);
+      background: var(--blue-700);
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .options-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .option-button {
+      width: 100%;
+      min-height: 4.25rem;
+      padding: 0.9rem 1rem;
+      border: 2px solid var(--gray-300);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--gray-900);
+      text-align: left;
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .option-button:hover:not(:disabled) {
+      border-color: var(--blue-700);
+      transform: translateY(-1px);
+      background: var(--blue-100);
+    }
+
+    .option-button:focus-visible,
+    .primary-button:focus-visible,
+    .secondary-button:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .option-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.68;
+    }
+
+    .option-button.correct {
+      border-color: var(--green);
+      background: var(--green-bg);
+      color: #103d29;
+      font-weight: 700;
+    }
+
+    .option-button.incorrect {
+      border-color: var(--red);
+      background: var(--red-bg);
+      color: #7a1b14;
+    }
+
+    .feedback {
+      display: none;
+      margin: 0.95rem 0 0;
+      padding: 0.8rem 0.9rem;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback.success {
+      color: #103d29;
+      background: var(--green-bg);
+      border: 1px solid rgba(25, 123, 76, 0.35);
+    }
+
+    .feedback.error {
+      color: #7a1b14;
+      background: var(--red-bg);
+      border: 1px solid rgba(180, 35, 24, 0.28);
+    }
+
+    .locked-message {
+      margin: 0;
+      padding: 0.8rem 0.9rem;
+      border-radius: 6px;
+      color: #5f4214;
+      background: #fff7e6;
+      border: 1px solid rgba(183, 121, 31, 0.28);
+      font-weight: 700;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      padding: 1.25rem 1.35rem;
+      border-top: 1px solid var(--gray-300);
+      background: var(--gray-100);
+    }
+
+    .primary-button,
+    .secondary-button {
+      min-height: 2.75rem;
+      padding: 0.7rem 1rem;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .primary-button {
+      color: var(--white);
+      background: var(--blue-700);
+    }
+
+    .primary-button:hover:not(:disabled) {
+      background: var(--blue-800);
+    }
+
+    .primary-button:disabled {
+      cursor: not-allowed;
+      background: #9fb3c8;
+    }
+
+    .secondary-button {
+      color: var(--blue-900);
+      background: var(--white);
+      border-color: var(--gray-300);
+    }
+
+    .secondary-button:hover {
+      border-color: var(--blue-700);
+      background: var(--blue-100);
+    }
+
+    .status-line {
+      margin-right: auto;
+      align-self: center;
+      color: var(--gray-700);
+      font-weight: 700;
+    }
+
+    .result-card {
+      display: none;
+      padding: 1.35rem;
+      border-color: rgba(25, 123, 76, 0.35);
+    }
+
+    .result-card.show {
+      display: block;
+    }
+
+    .result-card h2 {
+      margin: 0 0 0.5rem;
+      color: var(--green);
+    }
+
+    .result-card p {
+      margin: 0;
+      color: var(--gray-700);
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .syntax-panel {
+        position: static;
+        max-height: none;
+      }
+
+      .formula {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app-shell {
+        width: min(100% - 1rem, 1180px);
+        padding: 0.5rem 0;
+      }
+
+      .topbar,
+      .case-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .score-pill,
+      .case-badge {
+        width: 100%;
+      }
+
+      .formula {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: stretch;
+      }
+
+      .primary-button,
+      .secondary-button,
+      .status-line {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="syntax-panel" aria-label="Sintaxis para formular objetivos e indicadores">
+      <h1>Sintaxis para formular</h1>
+
+      <section class="syntax-block">
+        <h2>Objetivo estratégico</h2>
+        <div class="formula" aria-label="Formula de objetivo estrategico">
+          <span>Verbo en infinitivo</span>
+          <span>Condición de cambio</span>
+          <span>Sujeto</span>
+        </div>
+        <p class="example"><strong>Ejemplo:</strong> Mejorar + la rapidez de atención + de los clientes en ventanilla</p>
+      </section>
+
+      <section class="syntax-block">
+        <h2>Indicador</h2>
+        <div class="formula" aria-label="Formula de indicador">
+          <span>Parámetro de medición</span>
+          <span>Sujeto</span>
+          <span>Atributo</span>
+        </div>
+        <p class="example"><strong>Ejemplo:</strong> Porcentaje + de clientes en ventanilla + atendidos dentro del tiempo estándar</p>
+      </section>
+
+      <p class="note">El sujeto del objetivo y del indicador debe ser el mismo. La condición de cambio del objetivo debe convertirse en un atributo específico del indicador.</p>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="title-group">
+          <h2>Simulador de Balanced Scorecard</h2>
+          <p id="progressText">Caso 1 de 3</p>
+        </div>
+        <div class="score-pill" id="scoreText" aria-live="polite">Puntaje: 0 / 6</div>
+      </header>
+
+      <div class="progress-wrap" aria-hidden="true">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <article class="case-card" id="caseCard" aria-live="polite"></article>
+
+      <section class="result-card" id="resultCard" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <script>
+    const cases = [
+      {
+        title: "Caso 1: Negocio bancario",
+        context: "Un banco ha identificado que muchos clientes abandonan la fila antes de ser atendidos en ventanilla. Las encuestas internas señalan que el principal problema es la demora en la atención presencial, especialmente en horas de alta demanda. La gerencia busca mejorar la experiencia del cliente en agencias.",
+        objectives: [
+          {
+            text: "Mejorar la rapidez de atención de los clientes en ventanilla.",
+            correct: true,
+            feedback: "Correcto: usa verbo en infinitivo, condición de cambio y sujeto relacionado con la demora en ventanilla."
+          },
+          {
+            text: "Incrementar la cantidad de operaciones de los asesores comerciales.",
+            correct: false,
+            feedback: "No corresponde: cambia el sujeto hacia los asesores comerciales y no atiende el problema de los clientes en ventanilla."
+          },
+          {
+            text: "Fortalecer la capacitación de los colaboradores del área de sistemas.",
+            correct: false,
+            feedback: "No corresponde: el sujeto y el foco pertenecen al área de sistemas, no a la experiencia de atención presencial."
+          }
+        ],
+        indicators: [
+          {
+            text: "Porcentaje de clientes en ventanilla atendidos dentro del tiempo estándar.",
+            correct: true,
+            feedback: "Correcto: mantiene el sujeto 'clientes en ventanilla' y traduce la rapidez en 'atendidos dentro del tiempo estándar'."
+          },
+          {
+            text: "Cantidad de asesores comerciales capacitados en productos financieros.",
+            correct: false,
+            feedback: "No corresponde: el sujeto son asesores comerciales, por lo que no coincide con los clientes en ventanilla."
+          },
+          {
+            text: "Promedio de transacciones digitales realizadas por clientes del banco.",
+            correct: false,
+            feedback: "No corresponde: mide transacciones digitales y no la atención presencial en ventanilla."
+          }
+        ]
+      },
+      {
+        title: "Caso 2: Centro educativo privado",
+        context: "Un colegio privado ha observado que los estudiantes de secundaria presentan bajos resultados en las evaluaciones internas de matemática y comunicación. La dirección académica desea elevar el desempeño de los estudiantes mediante acciones pedagógicas y seguimiento permanente.",
+        objectives: [
+          {
+            text: "Incrementar el rendimiento académico de los estudiantes de secundaria.",
+            correct: true,
+            feedback: "Correcto: responde al bajo desempeño y cumple la estructura verbo + condición de cambio + sujeto."
+          },
+          {
+            text: "Mejorar la infraestructura deportiva del centro educativo privado.",
+            correct: false,
+            feedback: "No corresponde: la condición de cambio se dirige a infraestructura, no al rendimiento de los estudiantes."
+          },
+          {
+            text: "Reducir la cantidad de reuniones administrativas del personal docente.",
+            correct: false,
+            feedback: "No corresponde: cambia el sujeto al personal docente y no aborda los resultados académicos."
+          }
+        ],
+        indicators: [
+          {
+            text: "Porcentaje de estudiantes de secundaria con logro satisfactorio.",
+            correct: true,
+            feedback: "Correcto: mantiene el sujeto 'estudiantes de secundaria' y convierte el rendimiento en 'con logro satisfactorio'."
+          },
+          {
+            text: "Cantidad de aulas implementadas con proyectores multimedia.",
+            correct: false,
+            feedback: "No corresponde: el sujeto son aulas y el atributo trata sobre equipamiento, no desempeño académico."
+          },
+          {
+            text: "Promedio de reuniones realizadas por los coordinadores académicos.",
+            correct: false,
+            feedback: "No corresponde: mide reuniones de coordinadores, sin relación directa con el rendimiento de estudiantes."
+          }
+        ]
+      },
+      {
+        title: "Caso 3: Superintendencia de Migraciones",
+        context: "La Superintendencia de Migraciones ha recibido reclamos de ciudadanos por demoras en la emisión de pasaportes electrónicos. La entidad busca que el proceso sea más ágil y que los documentos se entreguen dentro de los plazos establecidos.",
+        objectives: [
+          {
+            text: "Optimizar la eficiencia del proceso de emisión de pasaportes electrónicos.",
+            correct: true,
+            feedback: "Correcto: se relaciona con la demora en la emisión y presenta verbo, condición de cambio y sujeto."
+          },
+          {
+            text: "Fortalecer la imagen institucional de las oficinas administrativas.",
+            correct: false,
+            feedback: "No corresponde: se enfoca en imagen institucional y oficinas, no en el proceso de emisión de pasaportes."
+          },
+          {
+            text: "Incrementar la cantidad de charlas informativas para usuarios extranjeros.",
+            correct: false,
+            feedback: "No corresponde: el sujeto son charlas para usuarios extranjeros, no pasaportes electrónicos ni su emisión."
+          }
+        ],
+        indicators: [
+          {
+            text: "Porcentaje de pasaportes electrónicos emitidos dentro del plazo establecido.",
+            correct: true,
+            feedback: "Correcto: mantiene el sujeto 'pasaportes electrónicos' y traduce la eficiencia en 'emitidos dentro del plazo establecido'."
+          },
+          {
+            text: "Cantidad de charlas informativas realizadas para usuarios extranjeros.",
+            correct: false,
+            feedback: "No corresponde: el sujeto y el atributo se orientan a charlas, no a pasaportes electrónicos."
+          },
+          {
+            text: "Índice de satisfacción de servidores administrativos con su oficina.",
+            correct: false,
+            feedback: "No corresponde: mide satisfacción interna y no la eficiencia del proceso de emisión."
+          }
+        ]
+      }
+    ];
+
+    const state = {
+      currentCase: 0,
+      score: 0,
+      objectiveSolved: false,
+      indicatorSolved: false,
+      awarded: {}
+    };
+
+    const caseCard = document.getElementById("caseCard");
+    const resultCard = document.getElementById("resultCard");
+    const progressText = document.getElementById("progressText");
+    const scoreText = document.getElementById("scoreText");
+    const progressBar = document.getElementById("progressBar");
+
+    function render() {
+      const current = cases[state.currentCase];
+      const caseNumber = state.currentCase + 1;
+      const totalCases = cases.length;
+      const progressPercent = ((state.indicatorSolved ? caseNumber : state.currentCase) / totalCases) * 100;
+
+      progressText.textContent = `Caso ${caseNumber} de ${totalCases}`;
+      scoreText.textContent = `Puntaje: ${state.score} / ${totalCases * 2}`;
+      progressBar.style.width = `${progressPercent}%`;
+
+      caseCard.innerHTML = `
+        <div class="case-hero">
+          <div>
+            <h2>${current.title}</h2>
+            <p>${current.context}</p>
+          </div>
+          <div class="case-badge">Caso ${caseNumber} de ${totalCases}</div>
+        </div>
+
+        <section class="question-section" aria-labelledby="objectiveTitle">
+          <h3 class="section-title" id="objectiveTitle"><span class="step-number">1</span>Seleccione el objetivo estratégico correctamente formulado</h3>
+          <div class="options-grid" id="objectiveOptions"></div>
+          <div class="feedback" id="objectiveFeedback" role="status"></div>
+        </section>
+
+        <section class="question-section ${state.objectiveSolved ? "" : "is-locked"}" aria-labelledby="indicatorTitle">
+          <h3 class="section-title" id="indicatorTitle"><span class="step-number">2</span>Seleccione el indicador relacionado con el objetivo elegido</h3>
+          <div id="indicatorArea"></div>
+          <div class="feedback" id="indicatorFeedback" role="status"></div>
+        </section>
+
+        <div class="actions">
+          <span class="status-line" id="caseStatus">${state.indicatorSolved ? "Caso completado correctamente." : "Completa ambas selecciones para avanzar."}</span>
+          <button class="secondary-button" type="button" id="resetButton">Reiniciar simulador</button>
+          <button class="primary-button" type="button" id="nextButton" ${state.indicatorSolved ? "" : "disabled"}>${state.currentCase === cases.length - 1 ? "Ver resultado final" : "Siguiente caso"}</button>
+        </div>
+      `;
+
+      renderOptions("objectiveOptions", current.objectives, "objective");
+      renderIndicatorArea(current);
+      document.getElementById("resetButton").addEventListener("click", resetSimulator);
+      document.getElementById("nextButton").addEventListener("click", goNext);
+      resultCard.classList.remove("show");
+    }
+
+    function renderOptions(containerId, options, type) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = "";
+
+      options.forEach((option, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "option-button";
+        button.textContent = `${String.fromCharCode(97 + index)}) ${option.text}`;
+        button.dataset.index = index;
+        button.addEventListener("click", () => handleSelection(type, index));
+        container.appendChild(button);
+      });
+    }
+
+    function renderIndicatorArea(current) {
+      const indicatorArea = document.getElementById("indicatorArea");
+
+      if (!state.objectiveSolved) {
+        indicatorArea.innerHTML = `<p class="locked-message">Primero elige correctamente el objetivo estratégico.</p>`;
+        return;
+      }
+
+      indicatorArea.innerHTML = `<div class="options-grid" id="indicatorOptions"></div>`;
+      renderOptions("indicatorOptions", current.indicators, "indicator");
+    }
+
+    function handleSelection(type, index) {
+      const current = cases[state.currentCase];
+      const list = type === "objective" ? current.objectives : current.indicators;
+      const option = list[index];
+      const feedbackId = type === "objective" ? "objectiveFeedback" : "indicatorFeedback";
+      const solvedKey = type === "objective" ? "objectiveSolved" : "indicatorSolved";
+
+      if (type === "indicator" && !state.objectiveSolved) return;
+
+      markButton(type, index, option.correct);
+      showFeedback(feedbackId, option.feedback, option.correct);
+
+      if (option.correct && !state[solvedKey]) {
+        state[solvedKey] = true;
+        addPointOnce(`${state.currentCase}-${type}`);
+
+        if (type === "objective") {
+          render();
+          showFeedback("objectiveFeedback", option.feedback, true);
+          lockCorrectChoice("objective", index);
+        } else {
+          document.getElementById("nextButton").disabled = false;
+          document.getElementById("caseStatus").textContent = "Caso completado correctamente.";
+          updateProgressAfterIndicator();
+        }
+      }
+    }
+
+    function markButton(type, selectedIndex, isCorrect) {
+      const containerId = type === "objective" ? "objectiveOptions" : "indicatorOptions";
+      const buttons = document.querySelectorAll(`#${containerId} .option-button`);
+
+      buttons.forEach((button, index) => {
+        if (index === selectedIndex) {
+          button.classList.add(isCorrect ? "correct" : "incorrect");
+        }
+
+        if (isCorrect) {
+          button.disabled = true;
+        }
+      });
+    }
+
+    function lockCorrectChoice(type, selectedIndex) {
+      const containerId = type === "objective" ? "objectiveOptions" : "indicatorOptions";
+      const buttons = document.querySelectorAll(`#${containerId} .option-button`);
+      buttons.forEach((button, index) => {
+        button.disabled = true;
+        if (index === selectedIndex) {
+          button.classList.add("correct");
+        }
+      });
+    }
+
+    function showFeedback(id, message, isSuccess) {
+      const feedback = document.getElementById(id);
+      if (!feedback) return;
+      feedback.textContent = message;
+      feedback.className = `feedback show ${isSuccess ? "success" : "error"}`;
+    }
+
+    function addPointOnce(key) {
+      if (state.awarded[key]) return;
+      state.awarded[key] = true;
+      state.score += 1;
+      scoreText.textContent = `Puntaje: ${state.score} / ${cases.length * 2}`;
+    }
+
+    function updateProgressAfterIndicator() {
+      const progressPercent = ((state.currentCase + 1) / cases.length) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+      scoreText.textContent = `Puntaje: ${state.score} / ${cases.length * 2}`;
+    }
+
+    function goNext() {
+      if (!state.indicatorSolved) return;
+
+      if (state.currentCase < cases.length - 1) {
+        state.currentCase += 1;
+        state.objectiveSolved = false;
+        state.indicatorSolved = false;
+        render();
+        return;
+      }
+
+      showFinalResult();
+    }
+
+    function showFinalResult() {
+      caseCard.style.display = "none";
+      progressText.textContent = "Simulador completado";
+      progressBar.style.width = "100%";
+      resultCard.innerHTML = `
+        <h2>Resultado final</h2>
+        <p>Has completado los 3 casos. Puntaje obtenido: ${state.score} de ${cases.length * 2} puntos.</p>
+        <div class="actions" style="padding: 1rem 0 0; border: 0; background: transparent;">
+          <button class="secondary-button" type="button" id="finalResetButton">Reiniciar simulador</button>
+        </div>
+      `;
+      resultCard.classList.add("show");
+      document.getElementById("finalResetButton").addEventListener("click", resetSimulator);
+    }
+
+    function resetSimulator() {
+      state.currentCase = 0;
+      state.score = 0;
+      state.objectiveSolved = false;
+      state.indicatorSolved = false;
+      state.awarded = {};
+      caseCard.style.display = "";
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
