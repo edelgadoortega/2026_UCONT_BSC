@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Balanced Scorecard - Sector Financiero Privado</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Financiera Crece Peru S.A.</p>
+      <h1>Simulador Balanced Scorecard - Sector Financiero Privado</h1>
+      <p>Construye, valida y analiza un Balanced Scorecard basico para una empresa financiera privada orientada a clientes MYPE.</p>
+    </div>
+    <button id="resetBtn" class="ghost-btn" type="button">Reiniciar simulador</button>
+  </header>
+
+  <main>
+    <section id="intro" class="hero-panel">
+      <div class="hero-copy">
+        <h2>Caso de estudio</h2>
+        <p>
+          Financiera Crece Peru S.A. ofrece creditos para micro y pequenas empresas,
+          creditos personales, cuentas de ahorro digitales y servicios financieros
+          para emprendedores. Ha crecido con rapidez, pero debe mejorar su rentabilidad,
+          fidelizar clientes MYPE, acelerar la evaluacion crediticia y fortalecer las
+          capacidades de sus colaboradores.
+        </p>
+      </div>
+      <div class="instructions">
+        <h3>Instrucciones</h3>
+        <ol>
+          <li>Selecciona un objetivo, un indicador, una meta y tres iniciativas por perspectiva.</li>
+          <li>Valida cada perspectiva para recibir retroalimentacion inmediata.</li>
+          <li>Ingresa valores actuales y genera el reporte final con mapa estrategico.</li>
+        </ol>
+        <button id="startBtn" class="primary-btn" type="button">Iniciar simulador</button>
+      </div>
+    </section>
+
+    <section id="builder" class="hidden">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Paso 1</p>
+          <h2>Construccion del Balanced Scorecard</h2>
+        </div>
+        <button id="toResultsBtn" class="primary-btn" type="button" disabled>Continuar al ingreso de resultados</button>
+      </div>
+      <div id="perspectiveCards" class="perspective-grid"></div>
+    </section>
+
+    <section id="resultsEntry" class="hidden">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Paso 2</p>
+          <h2>Ingreso de resultados</h2>
+        </div>
+        <button id="backToBuilderBtn" class="ghost-btn" type="button">Volver a editar respuestas</button>
+      </div>
+      <form id="resultsForm" class="results-grid"></form>
+      <div class="actions-row">
+        <button id="generateReportBtn" class="primary-btn" type="button">Generar reporte</button>
+        <button id="viewMapBtn" class="secondary-btn" type="button">Ver mapa estrategico</button>
+      </div>
+    </section>
+
+    <section id="reportSection" class="hidden">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Paso 3</p>
+          <h2>Reporte final</h2>
+        </div>
+        <div class="button-group">
+          <button id="printBtn" class="secondary-btn" type="button">Descargar reporte</button>
+          <button id="editFromReportBtn" class="ghost-btn" type="button">Volver a editar respuestas</button>
+        </div>
+      </div>
+      <div id="summaryPanel" class="summary-panel"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Perspectiva</th>
+              <th>Objetivo seleccionado</th>
+              <th>Indicador seleccionado</th>
+              <th>Meta</th>
+              <th>Valor ingresado</th>
+              <th>Nivel de avance</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="reportBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="mapSection" class="hidden">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Mapa estrategico</p>
+          <h2>Logica causa-efecto del Balanced Scorecard</h2>
+        </div>
+      </div>
+      <div id="strategyMap" class="strategy-map"></div>
+      <p class="map-caption">Balanced Scorecard: capacidades -> procesos -> clientes -> resultados financieros sostenibles.</p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
